@@ -1,57 +1,65 @@
-【process】
-☆ 二つのターミナルセッションを起動して再現する
-1.open the linux terminal(in this instance, you use ubuntu22.04-LTS) 2.
-2.start docker desktop
-3.create 1 network and 3 containers you use for simulating the attack ;spoofing.
-→commands
-1:docker network create --subnet=192.168.100.0/24 mynet
-2:docker run -itd --name container1 --network mynet --ip 192.168.100.10 ubuntu /bin/bash
-3:docker run -itd --name container2 --network mynet --ip 192.168.100.20 ubuntu /bin/bash
-4:docker run -itd --name container3 --network mynet --ip 192.168.100.30 --dns X.X.X.X --dns X.X.X.X ubuntu /bin/bash
-(if you want to confirm the dns settings on your circumstances, you should run this command; docker exec -it container3 cat /etc/resolv.conf)
-5:各コンテナの環境で ping コマンドを使用可能にするためにインストール
-docker exec -it container1 /bin/bash -c "apt update && apt install -y iputils-ping"
-docker exec -it container2 /bin/bash -c "apt update && apt install -y iputils-ping"
-docker exec -it container3 /bin/bash -c "apt update && apt install -y iputils-ping"
-6:
-ここで二つ目のターミナルを開く；二つ目のターミナルは開いたままにするが、実際に操作をするのはここのステップのみ。
-他は全部もう一方のターミナルで行う。
-(二つ目のターミナルで実行)
-// ネットワークをキャプチャする
-sudo apt-get update
-sudo apt-get install tcpdump
-sudo tcpdump -i docker0 -nn -v icmp
+### ステップバイステップ手順
 
+このガイドでは、Ubuntu 22.04 LTS を使用し、Docker 上で IP アドレススプーフィングのシミュレーションを行います。以下の手順に従ってください。
+
+1. **Linux ターミナルを開きます。**
+2. **Docker Desktop を起動します。**
+
+   Docker がインストールされていない場合は、先に Docker をインストールしてください。
+
+3. **Docker ネットワークと 3 つのコンテナを作成します。**
+
+   これらのコマンドを使用してネットワークを作成し、各コンテナを設定します:
+
+   ```bash
+   docker network create --subnet=192.168.100.0/24 mynet
+   docker run -itd --name container1 --network mynet --ip 192.168.100.10 ubuntu /bin/bash
+   docker run -itd --name container2 --network mynet --ip 192.168.100.20 ubuntu /bin/bash
+   docker run -itd --name container3 --network mynet --ip 192.168.100.30 --dns 8.8.8.8 --dns 8.8.4.4 ubuntu /bin/bash
+   (if you want to confirm the dns settings on your circumstances, you should run this command; docker exec -it container3 cat /etc/resolv.conf)
+   ```
+
+4. **各コンテナで ping コマンドが使用可能にするために必要なパッケージをインストール**
+   docker exec -it container1 /bin/bash -c "apt update && apt install -y iputils-ping"
+   docker exec -it container2 /bin/bash -c "apt update && apt install -y iputils-ping"
+   docker exec -it container3 /bin/bash -c "apt update && apt install -y iputils-ping"
+5. **別のターミナルを開いてネットワークトラフィックをキャプチャ、他のステップはすべて最初のターミナルセッションで行う**
+   sudo apt-get update
+   sudo apt-get install tcpdump
+   sudo tcpdump -i docker0 -nn -v icmp
+
+**必要に応じて、ファイアウォールのルールやネットワークの設定を確認**
 (必要であれば)FW ルールの確認
 sudo iptables -L
 (必要であれば)ネットワークルールの確認
 docker network inspect mynet
 
-7:ネットワークの確認をするために各コンテナに arp ツールをインストール+設定内容御確認の出力
-docker exec -it container1 /bin/bash -c "apt update && apt install net-tools && arp -n"
-docker exec -it container2 /bin/bash -c "apt update && apt install net-tools && arp -n"
-docker exec -it container3 /bin/bash -c "apt update && apt install net-tools && arp -n"
+7. **ネットワークの確認をするために各コンテナに arp ツールをインストール+設定内容御確認の出力**
+   docker exec -it container1 /bin/bash -c "apt update && apt install net-tools && arp -n"
+   docker exec -it container2 /bin/bash -c "apt update && apt install net-tools && arp -n"
+   docker exec -it container3 /bin/bash -c "apt update && apt install net-tools && arp -n"
 
-8:container1 container2 間で ping 通信が可能であることを確認
-docker exec -it container1 ping -c 4 192.168.100.20
-9:container3 で container1 に対して container2 として spoofing するための環境構築
+8. **container1 container2 間で ping 通信が可能であることを確認**
+   docker exec -it container1 ping -c 4 192.168.100.20
+   9:container3 で container1 に対して container2 として spoofing するための環境構築
 
 docker exec -it container3 ifconfig eth0 down
 docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0
 docker exec -it container3 ifconfig eth0 up
 
-10:container3 でスプーフィングをするために必要なツールをインストール＋環境構築
-[環境構築]
-docker exec -it container3 apt-get update
-docker exec -it container3 apt-get install macchanger
-[mac アドレスの変更]
-docker exec -it container3 ifconfig eth0 down
-docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0 // -m のあとのアドレスは container2 のものと同一、ネットワーク内を監視するツールからは情報が筒抜けだが、container1 からは判別不可
-docker exec -it container3 ifconfig eth0 up
+10. **container3 でスプーフィングをするために必要なツールをインストール＋環境構築**
+    [環境構築]
+    docker exec -it container3 apt-get update
+    docker exec -it container3 apt-get install macchanger
+    [mac アドレスの変更]
+    docker exec -it container3 ifconfig eth0 down
+    docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0 // -m のあとのアドレスは container2 のものと同一、ネットワーク内を監視するツールからは情報が筒抜けだが、container1 からは判別不可
+    docker exec -it container3 ifconfig eth0 up
 
-11:偽装した mac アドレスで ip アドレススプーフィングを実施
-docker exec -it container3 hping3 -c 4 -1 -a 192.168.100.20 192.168.100.10
+11. **偽装した mac アドレスで ip アドレススプーフィングを実施**
+    docker exec -it container3 hping3 -c 4 -1 -a 192.168.100.20 192.168.100.10
 
+```
 【結果】
 ・11 のコマンドを実行したターミナルで、
 $ docker exec -it container3 hping3 -c 4 -1 -a 192.168.100.20 192.168.100.10
@@ -85,3 +93,4 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 12 packets captured
 12 packets received by filter
 0 packets dropped by kernel
+```

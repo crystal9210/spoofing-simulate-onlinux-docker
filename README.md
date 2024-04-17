@@ -13,30 +13,44 @@
 
    ```bash
    docker network create --subnet=192.168.100.0/24 mynet
+
    docker run -itd --name container1 --network mynet --ip 192.168.100.10 ubuntu /bin/bash
+
    docker run -itd --name container2 --network mynet --ip 192.168.100.20 ubuntu /bin/bash
+
    docker run -itd --name container3 --network mynet --ip 192.168.100.30 --dns 8.8.8.8 --dns 8.8.4.4 ubuntu /bin/bash
+
    (if you want to confirm the dns settings on your circumstances, you should run this command; docker exec -it container3 cat /etc/resolv.conf)
    ```
 
 4. **各コンテナで ping コマンドが使用可能にするために必要なパッケージをインストール**
    docker exec -it container1 /bin/bash -c "apt update && apt install -y iputils-ping"
+
    docker exec -it container2 /bin/bash -c "apt update && apt install -y iputils-ping"
+
    docker exec -it container3 /bin/bash -c "apt update && apt install -y iputils-ping"
+
 5. **別のターミナルを開いてネットワークトラフィックをキャプチャ、他のステップはすべて最初のターミナルセッションで行う**
    sudo apt-get update
+
    sudo apt-get install tcpdump
+
    sudo tcpdump -i docker0 -nn -v icmp
 
 **必要に応じて、ファイアウォールのルールやネットワークの設定を確認**
 (必要であれば)FW ルールの確認
+
 sudo iptables -L
+
 (必要であれば)ネットワークルールの確認
+
 docker network inspect mynet
 
 7. **ネットワークの確認をするために各コンテナに arp ツールをインストール+設定内容御確認の出力**
    docker exec -it container1 /bin/bash -c "apt update && apt install net-tools && arp -n"
+
    docker exec -it container2 /bin/bash -c "apt update && apt install net-tools && arp -n"
+
    docker exec -it container3 /bin/bash -c "apt update && apt install net-tools && arp -n"
 
 8. **container1 container2 間で ping 通信が可能であることを確認**
@@ -44,16 +58,25 @@ docker network inspect mynet
 9. **container3 で container1 に対して container2 として spoofing するための環境構築**
 
 docker exec -it container3 ifconfig eth0 down
+
 docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0
+
 docker exec -it container3 ifconfig eth0 up
 
 10. **container3 でスプーフィングをするために必要なツールをインストール＋環境構築**
     [環境構築]
+
     docker exec -it container3 apt-get update
+
     docker exec -it container3 apt-get install macchanger
+
     [mac アドレスの変更]
+
     docker exec -it container3 ifconfig eth0 down
-    docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0 // -m のあとのアドレスは container2 のものと同一、ネットワーク内を監視するツールからは情報が筒抜けだが、container1 からは判別不可
+
+    docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0 // -m のあとのアドレスは container2 のものと同一、
+    ネットワーク内を監視するツールからは情報が筒抜けだが、container1 からは判別不可
+
     docker exec -it container3 ifconfig eth0 up
 
 11. **偽装した mac アドレスで ip アドレススプーフィングを実施**

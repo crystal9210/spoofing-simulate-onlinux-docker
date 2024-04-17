@@ -61,11 +61,11 @@ docker network inspect mynet
    docker exec -it container1 ping -c 4 192.168.100.20
 9. **container3 で container1 に対して container2 として spoofing するための環境構築**
 
-docker exec -it container3 ifconfig eth0 down
+   docker exec -it container3 ifconfig eth0 down
 
-docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0
+   docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0
 
-docker exec -it container3 ifconfig eth0 up
+   docker exec -it container3 ifconfig eth0 up
 
 10. **container3 でスプーフィングをするために必要なツールをインストール＋環境構築**
     [環境構築]

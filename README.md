@@ -1,11 +1,11 @@
 ### ステップバイステップ手順
 
-このガイドでは、Ubuntu 22.04 LTS を使用し、Docker 上で IP アドレススプーフィングのシミュレーションを行います。以下の手順に従ってください。
+このガイドでは、Ubuntu 22.04 LTS を使用し、Docker 上で IP アドレススプーフィングのシミュレーションを行う。手順の提示
 
 1. **Linux ターミナルを開きます。**
 2. **Docker Desktop を起動します。**
 
-   Docker がインストールされていない場合は、先に Docker をインストールしてください。
+   Docker がインストールされていない場合は、先に Docker をインストールする
 
 3. **Docker ネットワークと 3 つのコンテナを作成します。**
 
@@ -41,7 +41,7 @@ docker network inspect mynet
 
 8. **container1 container2 間で ping 通信が可能であることを確認**
    docker exec -it container1 ping -c 4 192.168.100.20
-   9:container3 で container1 に対して container2 として spoofing するための環境構築
+9. **container3 で container1 に対して container2 として spoofing するための環境構築**
 
 docker exec -it container3 ifconfig eth0 down
 docker exec -it container3 macchanger -m 02:42:c0:a8:64:14 eth0

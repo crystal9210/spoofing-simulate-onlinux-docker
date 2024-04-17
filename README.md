@@ -41,13 +41,13 @@
 
 **必要に応じて、ファイアウォールのルールやネットワークの設定を確認**
 
-(必要であれば)FW ルールの確認
+    (必要であれば)FW ルールの確認
 
-sudo iptables -L
+    sudo iptables -L
 
-(必要であれば)ネットワークルールの確認
+    (必要であれば)ネットワークルールの確認
 
-docker network inspect mynet
+    docker network inspect mynet
 
 7. **ネットワークの確認をするために各コンテナに arp ツールをインストール+設定内容御確認の出力**
 

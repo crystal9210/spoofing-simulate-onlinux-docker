@@ -24,6 +24,7 @@
    ```
 
 4. **各コンテナで ping コマンドが使用可能にするために必要なパッケージをインストール**
+
    docker exec -it container1 /bin/bash -c "apt update && apt install -y iputils-ping"
 
    docker exec -it container2 /bin/bash -c "apt update && apt install -y iputils-ping"
@@ -31,6 +32,7 @@
    docker exec -it container3 /bin/bash -c "apt update && apt install -y iputils-ping"
 
 5. **別のターミナルを開いてネットワークトラフィックをキャプチャ、他のステップはすべて最初のターミナルセッションで行う**
+
    sudo apt-get update
 
    sudo apt-get install tcpdump
@@ -38,6 +40,7 @@
    sudo tcpdump -i docker0 -nn -v icmp
 
 **必要に応じて、ファイアウォールのルールやネットワークの設定を確認**
+
 (必要であれば)FW ルールの確認
 
 sudo iptables -L
@@ -47,6 +50,7 @@ sudo iptables -L
 docker network inspect mynet
 
 7. **ネットワークの確認をするために各コンテナに arp ツールをインストール+設定内容御確認の出力**
+
    docker exec -it container1 /bin/bash -c "apt update && apt install net-tools && arp -n"
 
    docker exec -it container2 /bin/bash -c "apt update && apt install net-tools && arp -n"
